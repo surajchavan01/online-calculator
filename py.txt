@@ -1,0 +1,791 @@
+from modules.comman_master.services.model_search_service import (
+    get_records, create_record, update_record_by_id, delete_record_by_id, get_record_by_id
+)
+from modules.comman_master.models.material_model import MaterialModel
+from modules.comman_master.schemas.model_search_schema import *
+from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException
+from config.database import get_db
+from sqlalchemy.engine import Connection
+from modules.auth.dependencies import get_current_user
+from typing import List, Dict, Any
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+from modules.comman_master.models.inspiration_model import InspirationModel
+# from modules.comman_master.models.event_master_model import EventMasterModel
+
+
+# router = APIRouter(prefix="/pd-search-component", tags=["PD Search"])
+model_search_route = APIRouter(
+    prefix="/api/comman-master",
+    dependencies=[Depends(get_current_user)],  # Protect all routes
+    tags=["Common Master"],
+)
+
+
+@model_search_route.get("/eventdata")
+def get_all_pd_search(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    # Run raw SQL
+    result = db.execute(text("SELECT * FROM mst_events ORDER BY 1 DESC"))
+    
+    # Convert rows to dict
+    # return [dict(row._mapping) for row in result]
+
+    return get_records(
+        db=db,
+        model=MaterialModel,
+        skip=skip,
+        limit= limit,
+        allData=allData,
+        relationships=["creator_user"]  # add if you have; else remove
+    )
+# counter = 0
+# statement = ""
+
+# for key, sd in singleData.items():
+#         c = "'" if key in [22, 25, 26, 27] else ""
+# if len(sd) > 4:
+#         from_var = sd[0]
+#         to_var = sd[1]
+#         column = sd[2]
+#         col_from = sd[3]
+#         col_to = sd[4]
+# if getattr(self, from_var) and getattr(self, to_var):
+#         counter += 1
+#         statement += f" and mat_id in ( select matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = {key} and {column} between {c}{getattr(self, from_var)}{c} and {c}{getattr(self, to_var)}{c} ) "
+# elif getattr(self, from_var):
+#        counter += 1
+#        statement += f" and mat_id in ( select matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = {key} and {column} between {c}{getattr(self, from_var)}{c} and {col_to} ) "
+# elif getattr(self, to_var):
+#        counter += 1
+#        statement += f" and mat_id in ( select matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = {key} and {column} between {c}{col_from}{c} and {getattr(self, to_var)} ) "
+# else:
+#  from_var = sd[0]
+# column = sd[1]
+# if getattr(self, from_var):
+#  pass
+
+# ✅ Fetch all records
+@model_search_route.post("/model-search/event")
+async def get_materials_route(
+    data: MaterialModel,
+    request: Request,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+    allData: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = int(current_user.get("user_id"))
+    
+    client_url = request.headers.get("X-Client-URL")
+    print("Client is browsing:", client_url)
+
+    print("search fields", data)
+
+    mat_ids = []
+
+    
+    
+
+
+
+    # 
+    # DESIGN ATTRIBUTES
+    # 
+# if data.event_id:
+
+#         sql_query = text("SELECT DISTINCT event_id FROM mst_events where event_id = :event_id")
+
+#         result2 = db.execute( sql_query , { "event_id": data.event_id })
+#         mat_ids2 = [row.mat_id for row in result2]
+
+#         mat_ids = [ *mat_ids, *mat_ids2 ]
+
+#     # condition based mat ids
+#     # mat_ids = [17]
+#   return get_records(
+#         db=db,
+#         model=MaterialModel,
+#         skip=skip,
+#         limit=limit,
+#         allData=allData,
+#         relationships=["creator_user"],  # add if you have; else remove
+#         filters=[ MaterialModel.event_id.in_( MaterialModel ) ]
+#     )
+
+
+
+# #  this is the only for refrence 
+# from fastapi import FastAPI, Depends, Query
+# from sqlalchemy import create_engine, text
+# from sqlalchemy.orm import sessionmaker
+# from typing import List, Optional
+# from pydantic import BaseModel
+
+# # -----------------------------------
+# # Database Setup
+# # -----------------------------------
+# DATABASE_URL = "postgresql://username:password@localhost:5432/your_db"
+
+# engine = create_engine(DATABASE_URL)
+# SessionLocal = sessionmaker(bind=engine)
+# app = FastAPI()
+
+# # -----------------------------------
+# # Request Model
+# # -----------------------------------
+# class ProductFilter(BaseModel):
+#     category_ids: Optional[List[int]] = None
+#     sub_category_ids: Optional[List[int]] = None
+#     min_price: Optional[float] = None
+#     max_price: Optional[float] = None
+#     search: Optional[str] = None
+#     sort_by: Optional[str] = None   # e.g. "price" or "created_at"
+#     sort_order: Optional[str] = None  # "asc" or "desc"
+
+# # -----------------------------------
+# # Dependency
+# # -----------------------------------
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
+# # -----------------------------------
+# # Endpoint
+# # -----------------------------------
+# @app.post("/products/filter")
+# def filter_products(filters: ProductFilter, db=Depends(get_db)):
+#     query = "SELECT * FROM product WHERE 1=1"
+#     params = {}
+
+#     # ✅ Category filter
+#     if filters.category_ids:
+#         query += " AND category_id = ANY(:category_ids)"
+#         params["category_ids"] = filters.category_ids
+
+#     # ✅ Subcategory filter
+#     if filters.sub_category_ids:
+#         query += " AND sub_category_id = ANY(:sub_category_ids)"
+#         params["sub_category_ids"] = filters.sub_category_ids
+
+#     # ✅ Price range filter
+#     if filters.min_price is not None:
+#         query += " AND price >= :min_price"
+#         params["min_price"] = filters.min_price
+
+#     if filters.max_price is not None:
+#         query += " AND price <= :max_price"
+#         params["max_price"] = filters.max_price
+
+#     # ✅ Name search (case-insensitive)
+#     if filters.search:
+#         query += " AND LOWER(name) LIKE LOWER(:search)"
+#         params["search"] = f"%{filters.search}%"
+
+#     # ✅ Sorting
+#     if filters.sort_by in ["price", "created_at"]:
+#         order = "ASC" if filters.sort_order == "asc" else "DESC"
+#         query += f" ORDER BY {filters.sort_by} {order}"
+
+#     # ✅ Run query
+#     result = db.execute(text(query), params).fetchall()
+
+#     # ✅ Convert to dict
+#     products = [dict(row._mapping) for row in result]
+#     return {"count": len(products), "data": products}
+    
+ids = 0
+
+query = MstMaterialMapAttrib.query()
+for key, md in multiData.items():
+if key > 5000:
+from_var = md[0]
+column = md[1]
+if getattr(self, from_var):
+if key == 33 or key == 34:
+ids = []
+ids.append(getattr(self, from_var))
+elif key == 32:
+statement += f' and mat_id in ( select matattrib_mat_id FROM mst_material_map_attribs WHERE deleted_at is null and matattrib_attrib_id = {key} and matattrib_attrib_number={getattr(self, from_var)[0]} )'
+else:
+# ids = implode(',', getattr(self, from_var))
+# statement += f' and mat_id in ( select matattrib_mat_id FROM mst_material_map_attribs WHERE deleted_at is null and matattrib_attrib_id = {key} and matattrib_attrib_table_id={ids} )'
+
+
+            if key == 5009 or key == 5013:
+                ids = 0
+                if key == 5013:
+                    ddd = MstCsStoneSize.whereIn('csstnsize_code', getattr(self, from_var)).get()
+                if key == 5009:
+                    ddd = MstDiaStoneSize.whereIn('diastnsize_code', getattr(self, from_var)).get()
+                if key == 5022:
+                    ddd = MstDiaStoneSize.whereIn('diastnsize_code', getattr(self, from_var)).get()
+                if key == 5026:
+                    ddd = MstDiaStoneSize.whereIn('diastnsize_code', getattr(self, from_var)).get()
+                ctr = 1
+                for dd in ddd:
+                    if ctr != 1:
+                        ids += ","
+                    else:
+                        ids = None
+                    if key == 5009:
+                        ids += str(dd.diastnsize_id)
+                    if key == 5013:
+                        ids += str(dd.csstnsize_id)
+                    if key == 5022:
+                        ids += str(dd.csstnsize_id)
+                    if key == 5026:
+                        ids += str(dd.csstnsize_id)
+                    ctr += 1
+                # dd(ids)
+            counter += 1
+            if key >= 5018 and key <= 5022:
+                statement += f' and mat_id in  ( select distinct a.matbom_mat_id from vwc_mst_material_map_bom_combined as a inner join mst_material_exts as b on b.matext_mat_id = a.matbom_mat_id_material where a.deleted_at is null and {column} in ({ids}) and isnull(matbom_iscenter,0)=1 and matbom_mattype_id = 5 )'
+            elif key > 5022 and key <= 5026:
+                statement += f' and mat_id in  ( select distinct a.matbom_mat_id from vwc_mst_material_map_bom_combined as a inner join mst_material_exts as b on b.matext_mat_id = a.matbom_mat_id_material where a.deleted_at is null and {column} in ({ids}) and isnull(matbom_iscenter,0)=1 and matbom_mattype_id = 6 )'
+            else:
+                ids = ','.join(map(str, getattr(self, from_var)))
+
+                if hasattr(self, 'bom_symbol') and from_var in self.bom_symbol and self.bom_symbol[from_var] == True:
+                    statement += f' and mat_id in  ( select distinct a.matbom_mat_id from vwc_mst_material_map_bom_combined as a inner join mst_material_exts as b on b.matext_mat_id = a.matbom_mat_id_material where a.deleted_at is null and {column} in( {ids} ) )'
+                else:
+                    for bom_id in getattr(self, from_var):
+                        statement += f' and mat_id in  ( select distinct a.matbom_mat_id from vwc_mst_material_map_bom_combined as a inner join mst_material_exts as b on b.matext_mat_id = a.matbom_mat_id_material where a.deleted_at is null and {column} = {bom_id} )'
+                    if len(self.dia_conditions) == 0:
+                        statement += f'and mat_id not in  ( select distinct a.matbom_mat_id from vwc_mst_material_map_bom_combined as a inner join mst_material_exts as b on b.matext_mat_id = a.matbom_mat_id_material where a.deleted_at is null and {column} not in ({ids}) )'
+                    else:
+                        not_in = ids + ","
+else:
+    from_var = md[0]
+    column = md[1]
+    if getattr(self, from_var):
+        counter += 1
+        if key == 33 or key == 34:
+            statement += f' and mat_id in ( select matattrib_mat_id FROM mst_material_map_attribs WHERE deleted_at is null and matattrib_attrib_id = {key} and matattrib_attrib_table_id={getattr(self, from_var)} )'
+        elif key == 32:
+            statement += f' and mat_id in ( select matattrib_mat_id FROM mst_material_map_attribs WHERE deleted_at is null and matattrib_attrib_id = {key} and matattrib_attrib_number={getattr(self, from_var)[0]} )'
+        elif key == 42:
+            ids = ','.join(map(str, getattr(self, from_var)))
+            statement += f' and mat_id in ( select mmm_map_mat_id from material_map_materials where deleted_at  is null and mmm_mat_id in ( select mat_id from mst_materials where deleted_at is null and mat_matclass_id in ({ids}) ) )'
+        elif key == 19 or key == 20:
+            ids = ','.join(map(str, getattr(self, from_var)))
+            statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and {column} in ({ids})) "
+        else:
+            ids = ','.join(map(str, getattr(self, from_var)))
+            statement += f' and mat_id in ( select matattrib_mat_id FROM mst_material_map_attribs WHERE deleted_at is null and matattrib_attrib_id = {key} and matattrib_attrib_table_id in ({ids}) )'
+for key, sd in singleData.items():
+c = ""
+if key in [22, 25, 26, 27]:
+c = "'"
+if len(sd) > 4:
+from_var = sd[0]
+to_var = sd[1]
+column = sd[2]
+col_from = sd[3]
+col_to = sd[4]
+if getattr(self, from_var) and getattr(self, to_var):
+counter += 1
+statement += f' and mat_id in ( select matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = {key} and {column} between {c}{getattr(self, from_var)}{c} and {c}{getattr(self, to_var)}{c} ) '
+elif getattr(self, from_var):
+counter += 1
+statement += f' and mat_id in ( select matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = {key} and {column} between {c}{getattr(self, from_var)}{c} and {col_to} ) '
+elif getattr(self, to_var):
+counter += 1
+statement += f' and mat_id in ( select matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = {key} and {column} between {c}{col_from}{c} and {getattr(self, to_var)} ) '
+else:
+from_var = sd[0]
+column = sd[1]
+if getattr(self, from_var):
+pass
+
+for key, sd in lbww.items():
+from_var = sd[0]
+to_var = sd[1]
+column = sd[2]
+col_from = sd[3]
+col_to = sd[4]
+if key <= 3 or key == 9:
+if getattr(self, from_var) and getattr(self, to_var):
+if key == 9:
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where a.deleted_at is null and {column} between {getattr(self, from_var)} and {getattr(self, to_var)} )  and matbom_mattype_id = 5 ) "
+if hasattr(self, 'bom_symbol') and 'bom_dia_design_length' in self.bom_symbol and self.bom_symbol['bom_dia_design_length'] == True:
+pass
+else:
+statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where a.deleted_at is null and {column} not between {getattr(self, from_var)} and {getattr(self, to_var)} )  and matbom_mattype_id = 5 ) "
+statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where a.deleted_at is null and csstnsize_length not between {getattr(self, from_var)} and {getattr(self, to_var)} )   and matbom_mattype_id = 6 ) "
+else:
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where a.deleted_at is null and {column} between {getattr(self, from_var)} and {getattr(self, to_var)} )  and matbom_mattype_id = 5 and isnull(matbom_iscenter,0)=1 ) "
+elif getattr(self, from_var):
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where a.deleted_at is null and {column} between {getattr(self, from_var)} and {col_to} )  and isnull(matbom_iscenter,0)=1 and matbom_mattype_id = 5 ) "
+elif getattr(self, to_var):
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where a.deleted_at is null and {column} between {col_from} and {getattr(self, to_var)} )  and isnull(matbom_iscenter,0)=1 and matbom_mattype_id = 5 ) "
+elif key <= 6 or key == 10:
+if getattr(self, from_var) and getattr(self, to_var):
+if key == 10:
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where a.deleted_at is null and {column} between {getattr(self, from_var)} and {getattr(self, to_var)} )   and matbom_mattype_id = 6 ) "
+if hasattr(self, 'bom_symbol') and 'cs_dia_design_length' in self.bom_symbol and self.bom_symbol['cs_dia_design_length'] == True:
+pass
+else:
+statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where a.deleted_at is null and {column} not between {getattr(self, from_var)} and {getattr(self, to_var)} )   and matbom_mattype_id = 6 ) "
+# statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where a.deleted_at is null and diastnsize_length not between {getattr(self, from_var)} and {getattr(self, to_var)} )  and matbom_mattype_id = 5 ) "
+else:
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where a.deleted_at is null and {column} between {getattr(self, from_var)} and {getattr(self, to_var)} )  and isnull(matbom_iscenter,0)=1 and matbom_mattype_id = 6 ) "
+elif getattr(self, from_var):
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where a.deleted_at is null and {column} between {getattr(self, from_var)} and {col_to} )  and isnull(matbom_iscenter,0)=1 and matbom_mattype_id = 6 ) "
+elif getattr(self, to_var):
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where a.deleted_at is null and {column} between {col_from} and {getattr(self, to_var)} ) and isnull(matbom_iscenter,0)=1 and matbom_mattype_id = 6 ) "
+elif key <= 8 or key == 11 or key == 12:
+isCenter = 1
+if key == 11 or key == 12:
+isCenter = 0
+if getattr(self, from_var) and getattr(self, to_var):
+counter += 1
+statement += f" and mat_id in (SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_iscenter = {isCenter} and matbom_mattype_id = {column} group by matbom_mat_id having sum(isnull(matbom_primary_wt,0)) between {getattr(self, from_var)} and {getattr(self, to_var)} ) "
+elif getattr(self, from_var):
+counter += 1
+statement += f" and mat_id in (SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_iscenter = {isCenter} and matbom_mattype_id = {column} group by matbom_mat_id having sum(isnull(matbom_primary_wt,0)) between {getattr(self, from_var)} and {col_to} ) "
+elif getattr(self, to_var):
+counter += 1
+statement += f" and mat_id in (SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_iscenter = {isCenter} and matbom_mattype_id = {column} group by matbom_mat_id having sum(isnull(matbom_primary_wt,0)) between {col_from} and {getattr(self, to_var)} ) "
+elif key == 13:
+if getattr(self, from_var) and getattr(self, to_var):
+counter += 1
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_finding_sizes  as a inner join mst_material_exts as b on b.matext_findsize_id = a.findsize_id where a.deleted_at is null and {column} between {getattr(self, from_var)} and {getattr(self, to_var)} )   and matbom_mattype_id = 7 ) "
+if hasattr(self, 'bom_symbol') and 'bom_fnd_design_length_from' in self.bom_symbol and self.bom_symbol['bom_fnd_design_length_to'] == True:
+pass
+else:
+statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where a.deleted_at is null )  and matbom_mattype_id = 6 ) "
+statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where a.deleted_at is null)  and matbom_mattype_id = 5 ) "
+
+if self.centerStone:
+counter += 1
+statement += 'and mat_id in(select distinct a.matbom_mat_id from vwc_mst_material_map_bom_combined as a where deleted_at is null and isnull(matbom_iscenter,0)=1)'
+
+if self.pointer == 'P' or self.pointer == 'X':
+counter += 1
+statement += f"and mat_id in(SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_material_exts where deleted_at is null and matext_ispointer = '{self.pointer}' ) )"
+
+if self.multi_color:
+counter += 1
+statement += f'and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 48 and matattrib_attrib_bit = {self.multi_color})'
+
+if self.introducedInMonth:
+counter += 1
+statement += f'and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 34 and matattrib_attrib_number = {self.introducedInMonth})'
+if self.introducedInYear:
+counter += 1
+statement += f'and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 33 and matattrib_attrib_number = {self.introducedInYear})'
+if self.eventFrom:
+counter += 1
+statement += f'and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 16 and matattrib_attrib_table_id = {self.eventFrom})'
+
+if self.eventTo:
+counter += 1
+statement += f'and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 17 and matattrib_attrib_table_id = {self.eventTo})'
+
+if self.customerExclusive:
+counter += 1
+statement += f'and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 21 and matattrib_attrib_bit = {self.customerExclusive})'
+
+if self.exclusiveTillDateFrom and self.exclusiveTillDateTo:
+counter += 1
+statement += f"and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 22 and matattrib_attrib_date between '{self.exclusiveTillDateFrom}' and '{self.exclusiveTillDateFrom}')"
+
+if self.introduce_from and self.introduce_to:
+counter += 1
+statement += f"and mat_id in(select distinct matsty_mat_id from mst_material_styles where deleted_at is null and matsty_introduce_date between '{self.introduce_from}' and '{self.introduce_to}')"
+
+if self.shank_width:
+counter += 1
+statement += f"and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 49 and matattrib_attrib_text like '%{self.shank_width}%')"
+
+if self.design_length:
+counter += 1
+statement += f"and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 46 and matattrib_attrib_text like '%{self.design_length}%')"
+
+if self.design_breadth:
+counter += 1
+statement += f"and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 47 and matattrib_attrib_text like '%{self.design_breadth}%')"
+
+if self.design_width:
+counter += 1
+statement += f"and mat_id in(select distinct matattrib_mat_id from mst_material_map_attribs where deleted_at is null and matattrib_attrib_id = 48 and matattrib_attrib_text like '%{self.design_width}%')"
+
+if self.bom_special_effect_id:
+s_ids = ','.join(map(str, self.bom_special_effect_id))
+counter += 1
+statement += f"and mat_id in(select distinct matbom_mat_id from vwc_mst_material_map_bom_combined where matbom_mattype_id = 8 and matbom_mat_id_material in ({s_ids}))"
+
+if self.model_process_id:
+model_process_ids = ','.join(map(str, self.model_process_id))
+counter += 1
+statement += f"and mat_id in(select distinct matsty_mat_id from mst_material_styles where deleted_at is null and matsty_pdmodelproc_id in ({model_process_ids}))"
+
+if len(self.dia_conditions) > 0:
+counter += 1
+ctr = 1
+for con in self.dia_conditions:
+if ctr != 1:
+not_in += "," + str(con['shape_id'])
+else:
+not_in += str(con['shape_id'])
+statement += f" and mat_id in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where  b.matext_diastnshape_id IN({con['shape_id']}) AND a.deleted_at is null "
+if con['size_from'] and con['size_to']:
+statement += f"   and diastnsize_length between {con['size_from']} and {con['size_to']}  "
+statement += f" ) and matbom_mattype_id = 5 group by matbom_mat_id "
+if con['pcs_from'] and con['pcs_to']:
+statement += f" having sum(isnull(matbom_secondary_wt,0)) between {con['pcs_from']} and {con['pcs_to']}"
+if con['wt_from'] and con['wt_to']:
+if con['pcs_from'] and con['pcs_to']:
+statement += f" and sum(isnull(matbom_primary_wt,0))  between {con['wt_from']} and {con['wt_to']}"
+else:
+statement += f" having sum(isnull(matbom_primary_wt,0))  between {con['wt_from']} and {con['wt_to']}"
+statement += " ) "
+
+
+    statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where b.matext_diastnshape_id IN({con['shape_id']}) AND a.deleted_at is null "
+    if con['size_from'] and con['size_to']:
+        statement += f"   and diastnsize_length not between {con['size_from']} and {con['size_to']}  "
+    statement += f" ) and matbom_mattype_id = 5 group by matbom_mat_id "
+    if con['pcs_from'] and con['pcs_to']:
+        statement += f" having sum(isnull(matbom_secondary_wt,0)) not between {con['pcs_from']} and {con['pcs_to']}"
+    if con['wt_from'] and con['wt_to']:
+        if con['pcs_from'] and con['pcs_to']:
+            statement += f" and sum(isnull(matbom_primary_wt,0)) not  between {con['wt_from']} and {con['wt_to']}"
+        else:
+            statement += f" having sum(isnull(matbom_primary_wt,0)) not  between {con['wt_from']} and {con['wt_to']}"
+    statement += " ) "
+    ctr += 1
+# dd(not_in)
+statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null  and matbom_mat_id_material in ( select matext_mat_id from mst_dia_stone_sizes as a inner join mst_material_exts as b on b.matext_diastnsize_id = a.diastnsize_id where b.matext_diastnshape_id not IN({not_in}) AND a.deleted_at is null )"
+
+statement += " ) "
+statement += f" and mat_id not in ( SELECT DISTINCT matbom_mat_id from vwc_mst_material_map_bom_combined where deleted_at is null and matbom_mat_id_material in ( select matext_mat_id from mst_cs_stone_sizes  as a inner join mst_material_exts as b on b.matext_csstnsize_id = a.csstnsize_id where   a.deleted_at is null  )   and matbom_mattype_id = 6 ) "
+user = User.find(Auth.id()).emp
+if not self.allDesign or user.emp_issales_person:
+statement += ' and mat_id in (select matsty_mat_id from mst_material_styles where isnull(matsty_sample_design,0) = 1 ) '
+statement += "and mat_allow_model_search = 1"
+
+if self.dia_cs:
+counter += 1
+statement += f" and mat_id in ( select matbom_mat_id FROM ( select matbom_mat_id, sum((case when matbom_mattype_id = 6 then 1 else 0 end )) HasCS, sum((case when matbom_mattype_id = 5 then 1 else 0 end )) HasDia from vwc_mst_material_map_bom_combined where deleted_at is null and ( matbom_mattype_id = 6 or matbom_mattype_id = 5 ) group by matbom_mat_id ) A1 WHERE ( case when A1.HasCS > 0 and  A1.HasDia > 0 THEN 1 ELSE 0 END ) = 1 ) "
+
+if self.dia_only:
+counter += 1
+statement += f" and mat_id in ( select matbom_mat_id FROM ( select matbom_mat_id, sum((case when matbom_mattype_id = 6 then 1 else 0 end )) HasCS, sum((case when matbom_mattype_id = 5 then 1 else 0 end )) HasDia from vwc_mst_material_map_bom_combined where deleted_at is null and ( matbom_mattype_id = 6 or matbom_mattype_id = 5 ) group by matbom_mat_id ) A1 WHERE ( case when A1.HasCS = 0 and  A1.HasDia > 0 THEN 1 ELSE 0 END ) = 1 ) "
+
+if self.output_category_id:
+statement += f"and mat_pctg_id = {self.output_category_id}"
+
+if self.bulkstyle:
+data = stringToArray(self.bulkstyle)
+string = "','".join(data)
+styles = "'" + string + "'"
+counter += 1
+statement += f" and mat_code in ({styles}) "
+
+statement += '  ) order by mat_code asc'
+self.query = statement
+
+
+
+from django.core.cache import cache
+from functools import lru_cache
+
+class PdSearchComponent:
+def init(self):
+self.category_ids = []
+self.main_setting_ids = []
+self.bom_metal_type_id = []
+self.cs_stone_type_ids = []
+self.bom_finding_type_id = []
+self.bom_cs_type_id = []
+self.boms = []
+
+
+def hydrate(self):
+    # self.dispatchBrowserEvent('loadContactDeviceSelect2')
+    pass
+
+@lru_cache(maxsize=None)
+def concepts(self):
+    return cache.get_or_set('concepts', lambda: Concept.objects.all().values('con_id', 'con_code', 'con_name'), 60)
+
+@lru_cache(maxsize=None)
+def designusps(self):
+    return cache.get_or_set('designusps', lambda: DesignUsp.objects.order_by('usp_desc').values('usp_id', 'usp_code', 'usp_desc'), 60)
+
+@lru_cache(maxsize=None)
+def customers(self):
+    return cache.get_or_set('customers', lambda: CustomerMst.objects.all().values('cust_id', 'cust_code', 'cust_name'), 60)
+
+@lru_cache(maxsize=None)
+def metalPurities(self):
+    return cache.get_or_set('metalPurities', lambda: MetalPurity.objects.all().values('metpur_id', 'metpur_code', 'metpur_description'), 60)
+
+@lru_cache(maxsize=None)
+def stoneSettingTypes(self):
+    return cache.get_or_set('stoneSettingTypes', lambda: MstStoneSettingType.objects.all().values('stnsettingtype_id', 'stnsettingtype_code', 'stnsettingtype_desc'), 60)
+
+def stoneSettingSubTypes(self):
+    cache_key = f'stoneSettingSubTypes_{"_".join(map(str, self.main_setting_ids))}'
+    return cache.get_or_set(cache_key, lambda: MstStoneSettingSubType.objects.filter(
+        stnsettingsubtype_stnsettingtype_id__in=self.main_setting_ids
+    ).values('stnsettingsubtype_id', 'stnsettingsubtype_code', 'stnsettingsubtype_desc') if self.main_setting_ids else MstStoneSettingSubType.objects.all().values('stnsettingsubtype_id', 'stnsettingsubtype_code', 'stnsettingsubtype_desc'), 60)
+
+@lru_cache(maxsize=None)
+def csStoneNames(self):
+    return cache.get_or_set('csStoneNames', lambda: MstCsStoneName.objects.all().values('csstnname_id', 'csstnname_code', 'csstnname_name'), 60)
+
+@lru_cache(maxsize=None)
+def diaStoneShapes(self):
+    return cache.get_or_set('diaStoneShapes', lambda: MstDiaStoneShape.objects.all().values('diastnshape_id', 'diastnshape_code', 'diastnshape_name'), 60)
+
+@lru_cache(maxsize=None)
+def csStoneShapes(self):
+    return cache.get_or_set('csStoneShapes', lambda: MstCsStoneShape.objects.all().values('csstnshape_id', 'csstnshape_code', 'csstnshape_name'), 60)
+
+@lru_cache(maxsize=None)
+def occasions(self):
+    return cache.get_or_set('occasions', lambda: Occasion.objects.all().values('occa_id', 'occa_name', 'occa_description'), 60)
+
+@lru_cache(maxsize=None)
+def inspirations(self):
+    return cache.get_or_set('inspirations', lambda: MstInspiration.objects.all().values('inspirn_id', 'inspirn_code', 'inspirn_desc'), 60)
+
+@lru_cache(maxsize=None)
+def targetaudiances(self):
+    return cache.get_or_set('targetaudiances', lambda: MstTargetaudiance.objects.all().values('targaudin_id', 'targaudin_code', 'targaudin_desc'), 60)
+
+@lru_cache(maxsize=None)
+def designlooks(self):
+    return cache.get_or_set('designlooks', lambda: MstDesignlook.objects.all().values('dsgnlook_id', 'dsgnlook_code', 'dsgnlook_desc'), 60)
+
+@lru_cache(maxsize=None)
+def regions(self):
+    return cache.get_or_set('regions', lambda: MarketMst.objects.all().values('mkt_id', 'mkt_code', 'mkt_name'), 60)
+
+@lru_cache(maxsize=None)
+def settconcepts(self):
+    return cache.get_or_set('settconcepts', lambda: MstSettingconcept.objects.all().values('settingcon_id', 'settingcon_code', 'settingcon_desc'), 60)
+
+@lru_cache(maxsize=None)
+def religions(self):
+    return cache.get_or_set('religions', lambda: MstReligion.objects.all().values('religion_id', 'religion_code', 'religion_desc'), 60)
+
+@lru_cache(maxsize=None)
+def charactershapes(self):
+    return cache.get_or_set('charactershapes', lambda: MstCharactershape.objects.all().values('charshp_id', 'charshp_code', 'charshp_desc'), 60)
+
+def categoryChange(self, data):
+    self.category_ids = data
+
+def stoneMainSettingChange(self, data):
+    self.main_setting_ids = data
+    self.stoneSettingSubTypes()
+
+def metalTypeChange(self, data):
+    self.bom_metal_type_id = data
+
+def csTypeChange(self, data):
+    self.cs_stone_type_ids = data
+
+def fndTypeChange(self, data):
+    self.bom_finding_type_id = data
+
+def prodsizechartdets(self):
+    cache_key = f'prodsizechartdets_{"_".join(map(str, self.category_ids))}'
+    return cache.get_or_set(cache_key, lambda: ProdSizeChartDetMst.objects.filter(
+        prodsize_prodsizechart_id=10
+    ).filter(
+        prodsize_pctg_id__in=self.category_ids if self.category_ids else []
+    ).values('prodsize_id', 'prodsize_pctg_id', 'prodsize_code'), 60)
+
+@lru_cache(maxsize=None)
+def specialeffects(self):
+    return cache.get_or_set('MstMaterialEffect', lambda: MstMaterialEffect.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def catalogues(self):
+    return cache.get_or_set('MstCatalogue', lambda: MstCatalogue.objects.filter(catlog_catlogtype_id__in=[380, 382]).values('catlog_id', 'catlog_code', 'catlog_desc'), 60)
+
+@lru_cache(maxsize=None)
+def classifications(self):
+    return cache.get_or_set('MstMaterialClassification', lambda: MstMaterialClassification.objects.values('matclass_id', 'matclass_code', 'matclass_desc'), 60)
+
+@lru_cache(maxsize=None)
+def metalTypes(self):
+    return cache.get_or_set('MstMetalType', lambda: MstMetalType.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def modelProcesses(self):
+    return cache.get_or_set('PdModelProcessMst', lambda: PdModelProcessMst.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def designKnowns(self):
+    return cache.get_or_set('MstsMaterialDesignKnownAs', lambda: MstsMaterialDesignKnownAs.objects.all(), 60)
+
+def mount(self):
+    self.boms = []
+
+@lru_cache(maxsize=None)
+def getEvents(self):
+    return cache.get_or_set('events', lambda: MstEvent.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getEventYears(self):
+    return cache.get_or_set('eventYears', lambda: Year.objects.all(), 60)
+
+def getBomMetalPurities(self):
+    cache_key = f'bomMetalPurities_{"_".join(map(str, self.bom_metal_type_id))}'
+    return cache.get_or_set(cache_key, lambda: MstMetalPurity.objects.filter(
+        metpur_mettyp_id__in=self.bom_metal_type_id if self.bom_metal_type_id else []
+    ), 60)
+
+@lru_cache(maxsize=None)
+def getBomMetalColors(self):
+    return cache.get_or_set('bomMetalColors', lambda: MstMetalColor.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomAlloyCategories(self):
+    return cache.get_or_set('bomAlloyCategories', lambda: AlloyCategory.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomDiaTypes(self):
+    return cache.get_or_set('bomDiaTypes', lambda: MstDiaStoneType.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomDiaShapes(self):
+    return cache.get_or_set('bomDiaShapes', lambda: MstDiaStoneShape.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomDiaColors(self):
+    return cache.get_or_set('bomDiaColors', lambda: MstDiaStoneColor.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomDiaGroupSizes(self):
+    return cache.get_or_set('bomDiaGroupSizes', lambda: MstDiaStoneSizeGroup.objects.prefetch_related('shape'), 60)
+
+@lru_cache(maxsize=None)
+def getBomDiaSizes(self):
+    return cache.get_or_set('bomDiaSizes', lambda: MstDiaStoneSize.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomCsTypes(self):
+    return cache.get_or_set('bomCsTypes', lambda: MstCsStoneType.objects.all(), 60)
+
+def getBomCsNames(self):
+    cache_key = f'bomCsNames_{"_".join(map(str, self.bom_cs_type_id))}'
+    return cache.get_or_set(cache_key, lambda: MstCsStoneName.objects.filter(
+        csstnname_id__in=MstCsStoneTypeMapCsStoneName.objects.filter(
+            csstntype_id__in=self.bom_cs_type_id if self.bom_cs_type_id else []
+        ).values_list('csstnname_id', flat=True)
+    ) if self.bom_cs_type_id else MstCsStoneName.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomCsShapes(self):
+    return cache.get_or_set('bomCsShapes', lambda: MstCsStoneShape.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomCsColors(self):
+    return cache.get_or_set('bomCsColors', lambda: MstCsStoneColor.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomCsSizes(self):
+    return cache.get_or_set('bomCsSizes', lambda: MstCsStoneSize.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getBomFindingTypes(self):
+    return cache.get_or_set('bomFindingTypes', lambda: MstFindingCtg.objects.all(), 60)
+
+def getBomFindingSubCtgs(self):
+    cache_key = f'bomFindingSubCtgs_{"_".join(map(str, self.bom_finding_type_id))}'
+    return cache.get_or_set(cache_key, lambda: MstFindingSubCtg.objects.filter(
+        findsctg_findctg_id__in=self.bom_finding_type_id if self.bom_finding_type_id else []
+    ), 60)
+
+@lru_cache(maxsize=None)
+def getCategories(self):
+    return cache.get_or_set('categories', lambda: ProdCtgMst.objects.values('pctg_id', 'pctg_desc'), 60)
+
+def getStoneSettingSubTypes(self):
+    cache_key = f'stoneSettingSubTypes_{"_".join(map(str, self.main_setting_ids))}'
+    return cache.get_or_set(cache_key, lambda: MstStoneSettingSubType.objects.filter(
+        stnsettingsubtype_stnsettingtype_id__in=self.main_setting_ids if self.main_setting_ids else []
+    ).values('stnsettingsubtype_id', 'stnsettingsubtype_code', 'stnsettingsubtype_desc'), 60)
+
+def getSubCategories(self):
+    cache_key = f'subCategories_{"_".join(map(str, self.category_ids))}'
+    return cache.get_or_set(cache_key, lambda: ProdSubCtgMst.objects.prefetch_related('category').filter(
+        psctg_pctg_id__in=self.category_ids if self.category_ids else []
+    ), 60)
+
+@lru_cache(maxsize=None)
+def getImageViews(self):
+    return cache.get_or_set('imageViews', lambda: MstImageView.objects.all(), 60)
+
+@lru_cache(maxsize=None)
+def getYears(self):
+    return cache.get_or_set('years', lambda: Year.objects.order_by('-yr_id'), 60)
+
+def render(self):
+    return {
+        'prodsizechartdets': self.prodsizechartdets(),
+        'modelProcesses': self.modelProcesses(),
+        'designKnowns': self.designKnowns(),
+        'events': self.getEvents(),
+        'eventYears': self.getEventYears(),
+        'bomMetalPurities': self.getBomMetalPurities(),
+        'bomMetalColors': self.getBomMetalColors(),
+        'bomAlloyCategories': self.getBomAlloyCategories(),
+        'bomspecialeffects': self.specialeffects(),
+        'bomDiaTypes': self.getBomDiaTypes(),
+        'bomDiaShapes': self.getBomDiaShapes(),
+        'bomDiaColors': self.getBomDiaColors(),
+        'bomDiaGroupSizes': self.getBomDiaGroupSizes(),
+        'bomDiaSizes': self.getBomDiaSizes(),
+        'bomCsTypes': self.getBomCsTypes(),
+        'bomCsNames': self.getBomCsNames(),
+        'bomCsShapes': self.getBomCsShapes(),
+        'bomCsColors': self.getBomCsColors(),
+        'bomCsSizes': self.getBomCsSizes(),
+        'bomFindingTypes': self.getBomFindingTypes(),
+        'bomFindingSubCtgs': self.getBomFindingSubCtgs(),
+        'categories': self.getCategories(),
+        'concepts': self.concepts(),
+        'customers': self.customers(),
+        'metalPurities': self.metalPurities(),
+        'stoneSettingTypes': self.stoneSettingTypes(),
+        'stoneSettingSubTypes': self.getStoneSettingSubTypes(),
+        'csStoneNames': self.csStoneNames(),
+        'diaStoneShapes': self.diaStoneShapes(),
+        'csStoneShapes': self.csStoneShapes(),
+        'occasions': self.occasions(),
+        'inspirations': self.inspirations(),
+        'targetaudiances': self.targetaudiances(),
+        'designlooks': self.designlooks(),
+        'regions': self.regions(),
+        'settconcepts': self.settconcepts(),
+        'religions': self.religions(),
+        'charactershapes': self.charactershapes(),
+        'specialeffects': self.specialeffects(),
+        'catalogues': self.catalogues(),
+        'classifications': self.classifications(),
+        'designusps': self.designusps(),
+        'subCategories': self.getSubCategories(),
+        'imageViews': self.getImageViews(),
+        'years': self.getYears(),
+        'bomMetalTypes': self.metalTypes(),
+    }
